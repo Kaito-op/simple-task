@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waifu Api</title>
+</head>
+<body>
+    <h1>Best Waifu Image</h1>
+    <button id="fetchButton">Fetch Waifu</button>
+    <div id="imageContainer"></div>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', fetchWaifu);
+
+        function fetchWaifu() {
+            fetch('https://api.waifu.pics/sfw/waifu')
+                .then(response => response.json())
+                .then(data => {
+                    const imageUrl = data.url;
+                    const imageContainer = document.getElementById('imageContainer');
+                    imageContainer.innerHTML = `<img src="${imageUrl}" alt="Waifu Image" style="max-width: 100%; height: auto;">`;
+                })
+                .catch(error => console.error('Error fetching waifu image:', error));
+        }
+    </script>
+</body>
+</html>
