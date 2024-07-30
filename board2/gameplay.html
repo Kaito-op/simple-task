@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake & Ladders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-template-rows: repeat(10, 50px);
+            margin: 20px auto;
+            border: 5px solid #333;
+            background-color: #fff;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #999;
+            box-sizing: border-box;
+            font-size: 12px;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+            background-color: #fafafa;
+        }
+        .player1 {
+            color: red;
+        }
+        .player2 {
+            color: blue;
+        }
+        .player3 {
+            color: green;
+        }
+        .player4 {
+            color: purple;
+        }
+        #dice {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #message {
+            margin: 10px;
+            font-size: 18px;
+        }
+        .snake, .ladder {
+            position: absolute;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .snake {
+            background: repeating-linear-gradient(
+                135deg,
+                rgba(255, 0, 0, 0.7),
+                rgba(255, 0, 0, 0.7) 5px,
+                transparent 5px,
+                transparent 10px
+            );
+        }
+        .ladder {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0, 255, 0, 0.7),
+                rgba(0, 255, 0, 0.7) 5px,
+                transparent 5px,
+                transparent 10px
+            );
+        }
+        #player-controls {
+            margin: 20px;
+        }
+        #player-controls select, #player-controls button {
+            font-size: 16px;
+            margin: 5px;
+        }
+        #rules {
+            margin: 20px;
+            font-size: 16px;
+            text-align: left;
+            display: inline-block;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Game Description</h2>
+        <p>Snake and Ladder is a classic board game where players race to reach the final square (100) by rolling dice. The game board has 100 squares arranged in a 10x10 grid, with snakes and ladders placed on various squares.</p>
+        <p><strong>Objective:</strong> The goal is to be the first player to reach square 100. You move according to the roll of the dice. If you land on a square with the base of a ladder, you climb up to a higher square. If you land on a square with the head of a snake, you slide down to the tail of the snake.</p>
+
+        <h2>Rules</h2>
+        <ul>
+            <li>Players take turns rolling a single dice.</li>
+            <li>The number rolled determines how many squares the player moves forward.</li>
+            <li>If a player lands on the base of a ladder, they move up to the top of the ladder.</li>
+            <li>If a player lands on the head of a snake, they slide down to the tail of the snake.</li>
+            <li>The first player to reach or exceed square 100 wins the game.</li>
+            <li>If a player rolls a number that would take them past square 100, they do not move and their turn ends.</li>
+        </ul>
+    </div>
+    <div id="player-controls">
+        <label for="num-players">Select number of players:</label>
+        <select id="num-players">
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+        <button id="start-game">Start Game</button>
+    </div>
+    <div class="board" id="board">
+        <!-- The board cells will be generated here by JavaScript -->
+    </div>
+    <p id="players-info"></p>
+    <button id="dice" disabled>Roll Dice</button>
+    <p id="message"></p>
+
+    <script>
+        const boardSize = 10;
+        let currentPlayer = 1;
+        let playerCount = 2;
+        let playerPositions = [];
+        const board = document.getElementById('board');
+        const message = document.getElementById('message');
+        const dice = document.getElementById('dice');
+        const numPlayersSelect = document.getElementById('num-players');
+        const startGameButton = document.getElementById('start-game');
+        const playersInfo = document.getElementById('players-info');
+
+        // Snakes and Ladders setup
+        const snakes = { 99: 1, 95: 75, 92: 88, 89: 68, 62: 18 };
+        const ladders = { 2: 23, 17: 93, 22: 67, 38: 59, 70: 90 };
+
+        function initializeBoard() {
+            board.innerHTML = '';
+            playerPositions = Array(playerCount).fill(1);
+
+            for (let i = boardSize * boardSize; i >= 1; i--) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = 'cell-' + i;
+                cell.textContent = i;
+                
+                // Apply snake or ladder styling
+                if (snakes[i]) {
+                    const snakeElement = document.createElement('div');
+                    snakeElement.className = 'snake';
+                    cell.appendChild(snakeElement);
+                } else if (ladders[i]) {
+                    const ladderElement = document.createElement('div');
+                    ladderElement.className = 'ladder';
+                    cell.appendChild(ladderElement);
+                }
+
+                board.appendChild(cell);
+            }
+
+            updateBoard();
+            message.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        function movePlayer(player, steps) {
+            let newPosition = playerPositions[player - 1] + steps;
+            if (newPosition > boardSize * boardSize) {
+                newPosition = boardSize * boardSize;
+            }
+
+            // Check for snakes or ladders
+            if (snakes[newPosition]) {
+                newPosition = snakes[newPosition];
+                message.textContent += ` Oh no! Player ${player} hit a snake and moves back to ${newPosition}!`;
+            } else if (ladders[newPosition]) {
+                newPosition = ladders[newPosition];
+                message.textContent += ` Great! Player ${player} climbed a ladder to ${newPosition}!`;
+            }
+
+            // Update the player's position
+            playerPositions[player - 1] = newPosition;
+
+            // Display players on the board
+            updateBoard();
+
+            // Check for winner
+            if (playerPositions[player - 1] === boardSize * boardSize) {
+                message.textContent = `Player ${player} wins!`;
+                dice.disabled = true;
+            } else {
+                currentPlayer = (currentPlayer % playerCount) + 1;
+                message.textContent += ` Player ${currentPlayer}'s turn.`;
+            }
+        }
+
+        function updateBoard() {
+            for (let i = 1; i <= boardSize * boardSize; i++) {
+                const cell = document.getElementById('cell-' + i);
+                cell.innerHTML = i;
+
+                for (let j = 0; j < playerCount; j++) {
+                    if (playerPositions[j] === i) {
+                        cell.innerHTML += ` <span class="player${j + 1}">&#9823;</span>`;
+                    }
+                }
+            }
+        }
+
+        startGameButton.addEventListener('click', () => {
+            playerCount = parseInt(numPlayersSelect.value);
+            initializeBoard();
+            dice.disabled = false;
+        });
+
+        dice.addEventListener('click', () => {
+            const roll = Math.floor(Math.random() * 6) + 1;
+            message.textContent = `Player ${currentPlayer} rolled a ${roll}.`;
+            movePlayer(currentPlayer, roll);
+        });
+
+        // Initial setup
+        initializeBoard();
+    </script>
+</body>
+</html>
