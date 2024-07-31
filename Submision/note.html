@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Addicted Game</title>
+</head>
+<body>
+    <h1>Submit Your Favorite Game</h1>
+    <form id="gameForm">
+        <label for="gameName">Game Name:</label><br>
+        <input type="text" id="gameName" name="gameName" required><br><br>
+
+        <label for="gameDescription">Game Description:</label><br>
+        <textarea id="gameDescription" name="gameDescription" rows="4" cols="50" placeholder="Enter a description of the game" required></textarea><br><br>
+
+        <label for="gameImage">Game Image Upload:</label><br>
+        <input type="file" id="gameImage" name="gameImage" accept="image/*" required><br><br>
+
+        <input type="button" value="Submit" onclick="saveFormData()">
+    </form>
+    <script>
+        function saveFormData() {
+            const gameName = document.getElementById('gameName').value;
+            const gameDescription = document.getElementById('gameDescription').value;
+            const gameImage = document.getElementById('gameImage').files[0];
+            
+            // Create a text file with the form data
+            const data = `Game Name: ${gameName}\nGame Description: ${gameDescription}`;
+            const blob = new Blob([data], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'game_submission.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // Handle image file separately
+            if (gameImage) {
+                const imageUrl = URL.createObjectURL(gameImage);
+                const imageLink = document.createElement('a');
+                imageLink.href = imageUrl;
+                imageLink.download = gameImage.name;
+                document.body.appendChild(imageLink);
+                imageLink.click();
+                document.body.removeChild(imageLink);
+            }
+        }
+    </script>
+</body>
+</html>
